@@ -1,8 +1,17 @@
-# New Project
+# Fetch Meals React App
+
+### Quick Start: 
+
+```
+    git clone https://github.com/JamieVaughn/fetch-meals.git
+    cd fetch-meals
+    npm start
+    npm test
+```
 
 > ✨ Bootstrapped with Create Snowpack App (CSA).
 
-## Available Scripts
+## More on Available Scripts
 
 ### npm start
 
