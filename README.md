@@ -5,6 +5,7 @@
 ```
     git clone https://github.com/JamieVaughn/fetch-meals.git
     cd fetch-meals
+    npm install
     npm start
     npm test
 ```
