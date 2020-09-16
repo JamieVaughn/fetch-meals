@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import MealList from './MealList';
+import Error from './Error';
+import Loading from './Loading';
 import { findHits } from '../utils/utils';
 import '../index.css';
 import Ingredients from './Ingredients';
@@ -11,6 +13,7 @@ export default function Search() {
   const [selected, setSelected] = useState(false);
   const [ingredients, setIngredients] = useState([]);
   const [meals, setMeals] = useState({ ingredient: '', list: [] });
+  const [resource, setResource] = useState([]);
 
   const recipeURL =
     'https://raw.githubusercontent.com/daily-harvest/opportunities/master/web-1/data/products.json';
@@ -34,15 +37,39 @@ export default function Search() {
       });
   }, [selected]);
 
+  useEffect(() => {
+    setError(false);
+    if (ingredients.length === 0) {
+      fetch(ingredientURL)
+        .then((res) => {
+          console.log(res);
+          return res.json();
+        })
+        .then((data) => {
+          console.log('d', data);
+          setResource(data);
+          let hits = findHits(data, search);
+          setIngredients(hits);
+          if (hits.length === 0) setError('No Matches');
+        })
+        .catch((err) => {
+          console.log(err, error);
+          setError(err);
+        })
+        .finally(() => setLoading(false));
+    }
+  }, []);
+
   const findID = async () => {
-    fetch(ingredientURL)
-      .then((res) => res.json())
-      .then((data) => {
-        setIngredients(findHits(data, search));
-        if (ingredients.length === 0) setError('No Matches');
-      })
-      .catch((err) => setError(err))
-      .finally(() => setLoading(false));
+    setError(false);
+    setIngredients([]);
+    if (resource.length && search.length > 0) {
+      let hits = findHits(resource, search);
+      setIngredients(hits);
+      if (hits.length === 0) setError('No Matches');
+      setLoading(false);
+    } else {
+    }
   };
   const handleClick = (obj) => {
     setSelected(obj);
@@ -71,28 +98,21 @@ export default function Search() {
           Search
         </button>
       </form>
-      {typeof error === 'object' ? (
-        <div className="error">
-          There was a problem fetching the data: <br />
-          {error.message}
-        </div>
-      ) : loading ? (
-        <div className="loader">Loading results...</div>
-      ) : (
-        <section className="results">
-          {ingredients.length === 0 ? (
-            <div>
-              <br />
-              {error === 'No Matches'
-                ? "Sorry, that didn't match anything."
-                : 'Start typing an ingredient you like!'}
-            </div>
-          ) : (
-            <Ingredients ingredients={ingredients} action={handleClick} />
-          )}
-          <MealList meals={meals} />
-        </section>
-      )}
+      <section className="results">
+        {error.message || error === 'No Matches' ? <Error error={error} /> : ''}
+        {loading ? <Loading /> : ''}
+        {ingredients.length === 0 ? (
+          <div>Start typing an ingredient you like!</div>
+        ) : (
+          ''
+        )}
+        <Ingredients
+          search={search}
+          ingredients={ingredients}
+          action={handleClick}
+        />
+        <MealList meals={meals} />
+      </section>
     </div>
   );
 }

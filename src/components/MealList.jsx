@@ -5,7 +5,7 @@ const MealList = (props) => {
   const { meals } = props;
   return meals.list.length === 0 ? (
     meals.ingredient && !meals.list.length ? (
-      <h4>Sorry, we don't have any meals with {meals.ingredient}.</h4>
+      <h4>Sorry, we're sold out of meals with {meals.ingredient}.</h4>
     ) : null
   ) : (
     <>

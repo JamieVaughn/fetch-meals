@@ -1,15 +1,23 @@
 import React from 'react';
 
 const Ingredients = (props) => {
+  const { ingredients, search, action } = props;
   return (
     <>
-      <h3>Your search matched these ingredient(s).</h3>
-      <h4>Click on one to see meals for it:</h4>
+      <h3>Click on an ingredient to see meals for it:</h3>
+      {search.length && ingredients.length ? (
+        <h4>
+          There are {ingredients.length} results
+          {search ? ` that matched "${search}".` : '.'}
+        </h4>
+      ) : (
+        ''
+      )}
       <div className="flex ingredients-list">
-        {props.ingredients?.map((r) => (
-          <div className="clickable" key={r.id} onClick={() => props.action(r)}>
+        {ingredients.map((r) => (
+          <button className="clickable" key={r.id} onClick={() => action(r)}>
             {r.name}
-          </div>
+          </button>
         ))}
       </div>
     </>
