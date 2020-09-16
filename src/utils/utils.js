@@ -1,3 +1,6 @@
+import { useCallback } from 'react';
+import _ from 'lodash';
+
 const findHits = (data, string) => {
   let searchReg = new RegExp(string, 'gi');
   return data.filter((d) => {
@@ -6,4 +9,12 @@ const findHits = (data, string) => {
   });
 };
 
-export { findHits };
+function useDebounce(callback, delay) {
+  const debouncedFn = useCallback(
+    _.debounce((...args) => callback(...args), delay),
+    [delay],
+  );
+  return debouncedFn;
+}
+
+export { findHits, useDebounce };

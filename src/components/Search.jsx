@@ -1,14 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import MealList from './MealList';
-import { findHits } from '../utils/utils';
+import { findHits, useDebounce } from '../utils/utils';
 import '../index.css';
-import Ingredients from './Ingredients';
 
 export default function Search() {
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [search, setSearch] = useState('');
-  const [selected, setSelected] = useState(false);
   const [ingredients, setIngredients] = useState([]);
   const [meals, setMeals] = useState({ ingredient: '', list: [] });
 
@@ -16,47 +13,58 @@ export default function Search() {
     'https://raw.githubusercontent.com/daily-harvest/opportunities/master/web-1/data/products.json';
   const ingredientURL =
     'https://raw.githubusercontent.com/daily-harvest/opportunities/master/web-1/data/ingredients.json';
-  useEffect(() => {
-    setIngredients([]);
-    setSearch('');
-    setError(false);
-    fetch(recipeURL)
-      .then((response) => response.json())
-      .then((data) => {
-        const filtered = data.filter((d) => {
-          return d.ingredientIds.includes(selected.id);
-        });
-        setMeals({ ingredient: selected.name, list: filtered });
-      })
-      .catch((err) => setError(err))
-      .finally(() => {
-        setLoading(false);
-      });
-  }, [selected]);
 
-  const findID = async () => {
-    fetch(ingredientURL)
-      .then((res) => res.json())
-      .then((data) => {
-        setIngredients(findHits(data, search));
-        if (ingredients.length === 0) setError('No Matches');
-      })
-      .catch((err) => setError(err))
-      .finally(() => setLoading(false));
-  };
-  const handleClick = (obj) => {
-    setSelected(obj);
-  };
-  const handleInput = (e) => {
-    setSearch(e.target.value);
-  };
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const [search, setSearch] = useState('');
+  const [preflight, setPreflight] = useState('');
+
+  const debouncedSave = useDebounce((nextValue) => {
     setLoading(true);
-    setError(false);
-    setMeals({ ingredient: '', list: [] });
-    findID();
+    console.log('debounce', nextValue);
+    return setPreflight(nextValue);
+  }, 1000);
+
+  const handleChange = (event) => {
+    const { value: nextValue } = event.target;
+    setSearch(nextValue);
+    debouncedSave(nextValue);
   };
+
+  useEffect(() => {
+    if (search.length) {
+      fetch(ingredientURL)
+        .then((r) => r.json())
+        .then((data) => {
+          console.log('i', findHits(data, preflight));
+          setIngredients(findHits(data, preflight));
+          if (ingredients.length === 0) setError('No Matches');
+        })
+        .then(() => {
+          fetch(recipeURL)
+            .then((r) => r.json())
+            .then((data) => {
+              console.log('d', data);
+              const filtered = data.filter((d) => {
+                let test = false;
+                console.log('i', ingredients);
+                ingredients.forEach((i) => {
+                  console.log(i);
+                  test = d.ingredientIds.some((mid) => mid === i.id);
+                });
+                console.log('d', d.ingredientIds);
+                return test;
+              });
+              console.log('m', preflight, filtered);
+              setMeals({ ingredient: preflight, list: filtered });
+            })
+            .catch((err) => setError(err))
+            .finally(() => {
+              setLoading(false);
+            });
+        });
+    }
+  }, [preflight]);
+
+  if (loading) return <div className="loader">Loading results...</div>;
 
   return (
     <div className="Search">
@@ -65,30 +73,25 @@ export default function Search() {
           Search Our Meal Catalog by ingredient:
           <br />
           <br />
-          <input value={search} onChange={handleInput} />
+          <input value={search} onChange={handleChange} />
         </label>
-        <button onClick={handleSubmit} disabled={!search.length}>
-          Search
-        </button>
       </form>
       {typeof error === 'object' ? (
         <div className="error">
           There was a problem fetching the data: <br />
           {error.message}
         </div>
-      ) : loading ? (
-        <div className="loader">Loading results...</div>
       ) : (
         <section className="results">
-          {ingredients.length === 0 ? (
+          {search.length === 0 ? (
             <div>
               <br />
-              {error === 'No Matches'
+              {error === 'No Matches' && search.length > 0
                 ? "Sorry, that didn't match anything."
                 : 'Start typing an ingredient you like!'}
             </div>
           ) : (
-            <Ingredients ingredients={ingredients} action={handleClick} />
+            ''
           )}
           <MealList meals={meals} />
         </section>
