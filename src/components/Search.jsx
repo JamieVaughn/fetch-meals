@@ -37,6 +37,19 @@ export default function Search() {
       });
   }, [selected]);
 
+  // Async Await Alternative
+  // useEffect(() => {
+  //   const startFetching = async () => {
+  //     const response = await fetch(recipeURL);
+  //     const fetchedRecipes = await response.json();
+
+  //     // users = fetchedUsers;       // Incorrect! users is readonly
+  //     // users.push(..fetchedRecipes); // Incorrect! users is immutable
+  //     setUsers(fetchedRecipes);     // Correct!
+  //   };
+  //   startFetching();
+  // }, []);
+
   useEffect(() => {
     setError(false);
     if (ingredients.length === 0) {
